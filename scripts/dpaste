@@ -39,7 +39,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##########################################################################
 
-VERSION = '0.1.0'
+VERSION = '0.1.6'
 USER_AGENT = 'dpaste/' + VERSION
 DPASTE_URL = 'http://localhost:5000/'
 
