@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'''dpaste - a cli frontend for the dpaste.org pastebin'''
+'''dpaste - a cli frontend for the LodgeIt pastebin'''
 
 ##########################################################################
 # Drexel University dpaste description for LodgeIt pastebin
