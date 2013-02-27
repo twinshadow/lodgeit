@@ -39,7 +39,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##########################################################################
 
-VERSION = '0.1.6'
+VERSION = '0.1.7'
 USER_AGENT = 'dpaste/' + VERSION
 DPASTE_URL = 'http://localhost:5000/'
 
@@ -64,6 +64,35 @@ def is_text(text, maxCheck = 100, pctPrintable = 0.75):
         i += inc
     pct = float(nprintable) / ncheck
     return (pct >= pctPrintable)
+
+def print_languages(extended = False):
+    """Return a list of all supported languages, with description if extended=True."""
+    req = urllib2.Request(url=DPASTE_URL+'json/?method=pastes.getLanguages', data='', headers={'User-agent': USER_AGENT})
+    try:
+        f = urllib2.urlopen(req)
+    except urllib2.URLError, e: 
+        if hasattr(e, 'reason'):
+            print >> sys.stderr, "Error getting language list: %s" % e.reason
+        elif hasattr(e, 'code'):
+            print >> sys.stderr, "Server Error: %d - %s" % (e.code, e.msg)
+            if options.debug:
+                print f.read()
+        return False
+
+    url = json.loads(f.read())
+    languages={}
+    for key in url["data"].keys():
+        if len(key) > 0:
+            key=str(key)
+            languages[key] = str(url["data"][key])
+    if extended:
+        longlist = [] 
+        for key in languages.keys():
+            longlist.append((key,languages[key]))
+        return longlist
+    else:
+        return languages.keys()
+    
 
 
 def confirm(prompt = "OK?"):
@@ -240,11 +269,11 @@ def summarize_text(text):
 
 
 def main():
-    validSyntaxOpts = [ 'abap', 'antlr', 'antlr-as', 'antlr-cpp', 'antlr-csharp', 'antlr-java', 'antlr-objc', 'antlr-perl', 'antlr-python', 'antlr-ruby', 'apacheconf', 'applescript', 'as', 'as3', 'aspx-cs', 'aspx-vb', 'basemake', 'bash', 'bat', 'bbcode', 'befunge', 'boo', 'brainfuck', 'c', 'c-objdump', 'cheetah', 'clojure', 'common-lisp', 'console', 'control', 'cpp', 'cpp-objdump', 'csharp', 'css', 'css+django', 'css+erb', 'css+genshitext', 'css+mako', 'css+myghty', 'css+php', 'css+smarty', 'cython', 'd', 'd-objdump', 'delphi', 'diff', 'django', 'dpatch', 'dylan', 'erb', 'erl', 'erlang', 'evoque', 'fortran', 'gas', 'genshi', 'genshitext', 'glsl', 'gnuplot', 'groff', 'haskell', 'html', 'html+cheetah', 'html+django', 'html+evoque', 'html+genshi', 'html+mako', 'html+myghty', 'html+php', 'html+smarty', 'ini', 'io', 'irc', 'java', 'js', 'js+cheetah', 'js+django', 'js+erb', 'js+genshitext', 'js+mako', 'js+myghty', 'js+php', 'js+smarty', 'jsp', 'lhs', 'lighty', 'llvm', 'logtalk', 'lua', 'make', 'mako', 'matlab', 'matlabsession', 'minid', 'modelica', 'moocode', 'mupad', 'mxml', 'myghty', 'mysql', 'nasm', 'newspeak', 'nginx', 'numpy', 'objdump', 'objective-c', 'ocaml', 'perl', 'php', 'pot', 'pov', 'prolog', 'py3tb', 'pycon', 'pytb', 'python', 'python3', 'ragel', 'ragel-c', 'ragel-cpp', 'ragel-d', 'ragel-em', 'ragel-java', 'ragel-objc', 'ragel-ruby', 'raw', 'rb', 'rbcon', 'rebol', 'redcode', 'rhtml', 'rst', 'scala', 'scheme', 'smalltalk', 'smarty', 'sourceslist', 'splus', 'sql', 'sqlite3', 'squidconf', 'tcl', 'tcsh', 'tex', 'text', 'trac-wiki', 'vala', 'vb.net', 'vim', 'xml', 'xml+cheetah', 'xml+django', 'xml+erb', 'xml+evoque', 'xml+mako', 'xml+myghty', 'xml+php', 'xml+smarty', 'xslt', 'yaml' ]
+    #language stats
+    validSyntaxOpts = print_languages()
     validClipboardSelectionOpts = [ 'primary', 'secondary', 'clipboard' ]
     ext2lang_map = { 'sh':'bash', 'bash':'bash', 'bat':'bat', 'c':'c', 'h':'c', 'cpp':'cpp', 'css':'css', 'html':'html', 'htm':'html', 'ini':'ini', 'java':'java', 'js':'js', 'jsp':'jsp', 'Makefile':'make', 'pl':'perl', 'php':'php', 'php3':'php', 'py':'python', 'rb':'rb', 'rhtml':'rhtml', 'sql':'sql', 'sqlite':'sqlite3', 'tcl':'tcl', 'vim':'vim', 'xml':'xml' }
     deepdetect_map = {'bin/bash':'bash', 'bin/sh':'bash', 'python':'python', 'perl':'perl', 'ruby':'rb', '<!DOCTYPE':'html', '<?php':'php','bin/php':'php'}
-
     usage = """\
 Usage: %%prog [OPTION]... [FILE]...
   send text file(s), stdin, or clipboard to the %s pastebin and return the URL.
@@ -262,7 +291,8 @@ Examples:
 
     # pastebin-specific options first
     dpasteOrg_group = OptionGroup(parser, "LodgeIt Options")
-    dpasteOrg_group.add_option('-l', dest='lang', help='language of content for syntax highlighting; default is "%default"; use "list" to show all ' + str(len(validSyntaxOpts)) + ' supported langs', metavar='"LANGUAGE"')
+    dpasteOrg_group.add_option('-l', dest='lang', help='language of content for syntax highlighting; default is "%default"', metavar='"LANGUAGE"')
+    dpasteOrg_group.add_option('-L', '', dest='langlist', help='query server to show all ' + str(len(validSyntaxOpts)) + ' supported langs for LANGUAGE', action="store_true", default=False)
     dpasteOrg_group.add_option('-p', '--private', dest='private', help='paste as private', action="store_true", default=False)
     parser.add_option_group(dpasteOrg_group)
     # other options
@@ -280,10 +310,13 @@ Examples:
     parser.set_defaults(lang='text', selection='primary')
     (options, args) = parser.parse_args()
 
-    if options.lang.lower() == 'list':
-        print 'Valid language syntax options:'
-        for opt in validSyntaxOpts:
-            print opt
+
+    if options.langlist:
+        print >> sys.stderr, 'Supported Languages:\n'
+        languages = print_languages(True)
+        languages.sort(lambda a, b: cmp(a[1].lower(), b[1].lower()))
+        for alias, name in print_languages(True):
+            print '    %-30s%s' % (alias, name)
         sys.exit(0)
     if options.clipin:
         if not os.access('/usr/bin/xsel', os.X_OK):
