@@ -39,12 +39,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##########################################################################
 
-VERSION = '0.1.7'
+VERSION = '0.1.8'
 USER_AGENT = 'dpaste/' + VERSION
 DPASTE_URL = 'http://localhost:5000/'
 
 import os, sys, urllib, urllib2, subprocess, json
 from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
+from datetime import datetime
 
 
 def is_text(text, maxCheck = 100, pctPrintable = 0.75):
@@ -64,36 +65,6 @@ def is_text(text, maxCheck = 100, pctPrintable = 0.75):
         i += inc
     pct = float(nprintable) / ncheck
     return (pct >= pctPrintable)
-
-def print_languages(extended = False):
-    """Return a list of all supported languages, with description if extended=True."""
-    req = urllib2.Request(url=DPASTE_URL+'json/?method=pastes.getLanguages', data='', headers={'User-agent': USER_AGENT})
-    try:
-        f = urllib2.urlopen(req)
-    except urllib2.URLError, e: 
-        if hasattr(e, 'reason'):
-            print >> sys.stderr, "Error getting language list: %s" % e.reason
-        elif hasattr(e, 'code'):
-            print >> sys.stderr, "Server Error: %d - %s" % (e.code, e.msg)
-            if options.debug:
-                print f.read()
-        return False
-
-    url = json.loads(f.read())
-    languages={}
-    for key in url["data"].keys():
-        if len(key) > 0:
-            key=str(key)
-            languages[key] = str(url["data"][key])
-    if extended:
-        longlist = [] 
-        for key in languages.keys():
-            longlist.append((key,languages[key]))
-        return longlist
-    else:
-        return languages.keys()
-    
-
 
 def confirm(prompt = "OK?"):
     '''prompt user for yes/no input and return True or False'''
@@ -118,7 +89,6 @@ def confirm(prompt = "OK?"):
 
 def paste(text, options):
     '''send text to LodgeIt and return the URL'''
-    import re
     if not text:
         print >> sys.stderr, "No text to send."
         return False
@@ -156,12 +126,12 @@ def paste(text, options):
 
     url = json.loads(f.read())
     if url["error"] == None:
-      return DPASTE_URL+'show/'+url["data"]+'/'
+        return DPASTE_URL+'show/'+url["data"]+'/'
     else:
-      print >> sys.stderr, "API Error: %s" % url["error"]
-      if options.debug:
-        print f.read()
-      return False
+        print >> sys.stderr, "API Error: %s" % url["error"]
+        if options.debug:
+            print f.read()
+        return False
 
 def sysinfo(show_stderr = False, show_successful_cmds = True, show_failed_cmds = True):
     '''returns commonly requested (and some fedora-specific) system info'''
@@ -267,6 +237,107 @@ def summarize_text(text):
     return tsum
 
 
+def print_languages(extended = False):
+    """Return a list of all supported languages, with description if extended=True."""
+    req = urllib2.Request(url=DPASTE_URL+'json/?method=pastes.getLanguages', data='', headers={'User-agent': USER_AGENT})
+    try:
+        f = urllib2.urlopen(req)
+    except urllib2.URLError, e: 
+        if hasattr(e, 'reason'):
+            print >> sys.stderr, "Error getting language list: %s" % e.reason
+        elif hasattr(e, 'code'):
+            print >> sys.stderr, "Server Error: %d - %s" % (e.code, e.msg)
+            if options.debug:
+                print f.read()
+        return False
+
+    url = json.loads(f.read())
+    languages={}
+    for key in url["data"].keys():
+        if len(key) > 0:
+            key=str(key)
+            languages[key] = str(url["data"][key])
+    if extended:
+        longlist = [] 
+        for key in languages.keys():
+            longlist.append((key,languages[key]))
+        return longlist
+    else:
+        return languages.keys()
+
+
+def print_paste(data):
+    print '    %-30s%s' % ("Paste ID:", str(data["paste_id"]))
+    print '    %-30s%s' % ("Parent ID:", str(data["parent_id"]))
+    print '    %-30s%s' % ("Language:", str(data["language"]))
+    print '    %-30s%s' % ("Publish Date:", datetime.fromtimestamp(data["pub_date"]).strftime('%a %b %d %H:%M:%S %Z %Y'))
+    print "Summary:\n%s" % summarize_text(data["code"])
+
+
+def get_last_paste(options):
+    req = urllib2.Request(url=DPASTE_URL+'json/?method=pastes.getLast', data='', headers={'User-agent': USER_AGENT})
+    if options.proxy:
+        if options.debug:
+            print >> sys.stderr, "Using proxy: %s" % options.proxy
+        req.set_proxy(options.proxy, 'http')
+
+    try:
+        f = urllib2.urlopen(req)
+    except urllib2.URLError, e: 
+        if hasattr(e, 'reason'):
+            print >> sys.stderr, "Error Getting Paste: %s" % e.reason
+        elif hasattr(e, 'code'):
+            print >> sys.stderr, "Server Error: %d - %s" % (e.code, e.msg)
+            if options.debug:
+                print f.read()
+        return False
+
+    url = json.loads(f.read())
+    if url["error"] == None:
+        print "Most recent public paste"
+        print '#'*50
+        print_paste(url["data"])
+        print '#'*50
+    else:
+        print >> sys.stderr, "API Error: %s" % url["error"]
+        if options.debug:
+            print f.read()
+        return False
+
+
+def get_recent_pastes(options):
+    params = json.dumps({'amount': options.amount})
+
+    req = urllib2.Request(url=DPASTE_URL+'json/?method=pastes.getRecent', data=params, headers={'User-agent': USER_AGENT,'Content-Type': 'application/json'})
+    if options.proxy:
+        if options.debug:
+            print >> sys.stderr, "Using proxy: %s" % options.proxy
+        req.set_proxy(options.proxy, 'http')
+
+    try:
+        f = urllib2.urlopen(req)
+    except urllib2.URLError, e: 
+        if hasattr(e, 'reason'):
+            print >> sys.stderr, "Error Uploading: %s" % e.reason
+        elif hasattr(e, 'code'):
+            print >> sys.stderr, "Server Error: %d - %s" % (e.code, e.msg)
+            if options.debug:
+                print f.read()
+        return False
+
+    url = json.loads(f.read())
+    if url["error"] == None:
+        print "%s most recent public pastes" % str(options.amount)
+        print "%s%s%s%s%s" % ('#/*','-'*27,'snip','-'*27,'*\#')
+        for data in url["data"]:
+            print_paste(data)
+            print "%s%s%s%s%s\n" % ('#\*','-'*27,'*snip*','-'*27,'*/#')
+    else:
+        print >> sys.stderr, "API Error: %s" % url["error"]
+        if options.debug:
+            print f.read()
+        return False
+
 
 def main():
     #language stats
@@ -291,6 +362,9 @@ Examples:
 
     # pastebin-specific options first
     dpasteOrg_group = OptionGroup(parser, "LodgeIt Options")
+    dpasteOrg_group.add_option('', '--getlast', dest='getlast', help='get the last public paste', action="store_true", default=False)
+    dpasteOrg_group.add_option('', '--getrecent', dest='getrecent', help='get the AMOUNT most recent public pastes', action="store_true", default=False)
+    dpasteOrg_group.add_option('-n', '', dest='amount', help='set AMOUNT of most recent pastes to get; default is %default', metavar='AMOUNT')
     dpasteOrg_group.add_option('-l', dest='lang', help='language of content for syntax highlighting; default is "%default"', metavar='"LANGUAGE"')
     dpasteOrg_group.add_option('-L', '', dest='langlist', help='query server to show all ' + str(len(validSyntaxOpts)) + ' supported langs for LANGUAGE', action="store_true", default=False)
     dpasteOrg_group.add_option('-p', '--private', dest='private', help='paste as private', action="store_true", default=False)
@@ -307,9 +381,8 @@ Examples:
     dpasteProg_group.add_option('', '--confirm', dest='confirm', help='print paste, and prompt for confirmation before sending', action="store_true", default=False)
     parser.add_option_group(dpasteProg_group)
 
-    parser.set_defaults(lang='text', selection='primary')
+    parser.set_defaults(lang='text', selection='primary', amount=5)
     (options, args) = parser.parse_args()
-
 
     if options.langlist:
         print >> sys.stderr, 'Supported Languages:\n'
@@ -318,6 +391,15 @@ Examples:
         for alias, name in print_languages(True):
             print '    %-30s%s' % (alias, name)
         sys.exit(0)
+
+    if options.getlast:
+        get_last_paste(options)
+        sys.exit(0)
+    
+    if options.getrecent:
+        get_recent_pastes(options)
+        sys.exit(0)
+
     if options.clipin:
         if not os.access('/usr/bin/xsel', os.X_OK):
             # TODO: try falling back to xclip or dbus
