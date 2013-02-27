@@ -10,6 +10,11 @@
 # dpaste is fpaste for LodgeIt pastebin.  Modified fpaste to work with 
 # Lodgeit pastebin; Drexel's private pastebin.  dpaste utilizes the JSON
 # API in LodgeIt unlike lodgeit.py (which uses the XMLRPC API).
+#
+# Tested Environment
+#   Ubuntu 12.04.2 LTS
+#   Linux 3.2.0-38-generic x86_64 GNU/Linux
+#   Python 2.7.3
 # 
 ##########################################################################
 
@@ -89,8 +94,8 @@ def paste(text, options):
         print >> sys.stderr, "No text to send."
         return False
 
-    #params = urllib.urlencode({'title': options.desc, 'author': options.nick, 'lexer': options.lang, 'content': text, 'expire_options': options.expires})
-    params = json.dumps({'language': options.lang, 'code': text, 'private': options.private})
+    #text.decode is to account for Unicode
+    params = json.dumps({'language': options.lang, 'code': text.decode("cp1252", "ignore"), 'private': options.private})
     pasteSizeKiB = len(params)/1024.0
 
     if pasteSizeKiB >= 512:   # 512KiB appears to be the current hard limit (20110404); old limit was 16MiB
