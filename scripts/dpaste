@@ -39,7 +39,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##########################################################################
 
-VERSION = '0.1.8'
+VERSION = '0.1.9'
 USER_AGENT = 'dpaste/' + VERSION
 DPASTE_URL = 'http://localhost:5000/'
 
@@ -87,11 +87,37 @@ def confirm(prompt = "OK?"):
         return False
 
 
+def lodgeit_api_request(command = "",params = "",options = False):
+    req = urllib2.Request(url=DPASTE_URL+'json/?method=pastes.'+command, data=params, headers={'User-agent': USER_AGENT,'Content-Type': 'application/json'})
+    if options:
+        if options.proxy:
+            if options.debug:
+                print >> sys.stderr, "Using proxy: %s" % options.proxy
+            req.set_proxy(options.proxy, 'http')
+    try:
+        f = urllib2.urlopen(req)
+    except urllib2.URLError, e: 
+        if hasattr(e, 'reason'):
+            if command == "newPaste":
+                print >> sys.stderr, "Error Uploading: %s" % e.reason
+            elif command == "getLanguages":
+                print >> sys.stderr, "Error getting language list: %s" % e.reason
+            else:
+                print >> sys.stderr, "Error Getting Paste: %s" % e.reason
+        elif hasattr(e, 'code'):
+            print >> sys.stderr, "Server Error: %d - %s" % (e.code, e.msg)
+            if options.debug:
+                print f.read()
+        return False
+
+    return json.loads(f.read())
+
+
 def paste(text, options):
     '''send text to LodgeIt and return the URL'''
     if not text:
         print >> sys.stderr, "No text to send."
-        return False
+        return False,False
 
     #text.decode is to account for Unicode
     params = json.dumps({'language': options.lang, 'code': text.decode("cp1252", "ignore"), 'private': options.private})
@@ -103,35 +129,19 @@ def paste(text, options):
     if not is_text(text):
         print >> sys.stderr, "WARNING: your paste looks a lot like binary data instead of text."
         if not confirm("Send binary data anyway?"):
-            return False
-
-    req = urllib2.Request(url=DPASTE_URL+'json/?method=pastes.newPaste', data=params, headers={'User-agent': USER_AGENT,'Content-Type': 'application/json'})
-    if options.proxy:
-        if options.debug:
-            print >> sys.stderr, "Using proxy: %s" % options.proxy
-        req.set_proxy(options.proxy, 'http')
+            return False,False
 
     print >> sys.stderr, "Uploading (%.1fKiB)..." % pasteSizeKiB
 
-    try:
-        f = urllib2.urlopen(req)
-    except urllib2.URLError, e: 
-        if hasattr(e, 'reason'):
-            print >> sys.stderr, "Error Uploading: %s" % e.reason
-        elif hasattr(e, 'code'):
-            print >> sys.stderr, "Server Error: %d - %s" % (e.code, e.msg)
-            if options.debug:
-                print f.read()
-        return False
+    url = lodgeit_api_request("newPaste",params,options)
 
-    url = json.loads(f.read())
     if url["error"] == None:
-        return DPASTE_URL+'show/'+url["data"]+'/'
+        return (DPASTE_URL+'show/'+url["data"]+'/',url["data"])
     else:
         print >> sys.stderr, "API Error: %s" % url["error"]
         if options.debug:
             print f.read()
-        return False
+        return False,False
 
 def sysinfo(show_stderr = False, show_successful_cmds = True, show_failed_cmds = True):
     '''returns commonly requested (and some fedora-specific) system info'''
@@ -239,19 +249,7 @@ def summarize_text(text):
 
 def print_languages(extended = False):
     """Return a list of all supported languages, with description if extended=True."""
-    req = urllib2.Request(url=DPASTE_URL+'json/?method=pastes.getLanguages', data='', headers={'User-agent': USER_AGENT})
-    try:
-        f = urllib2.urlopen(req)
-    except urllib2.URLError, e: 
-        if hasattr(e, 'reason'):
-            print >> sys.stderr, "Error getting language list: %s" % e.reason
-        elif hasattr(e, 'code'):
-            print >> sys.stderr, "Server Error: %d - %s" % (e.code, e.msg)
-            if options.debug:
-                print f.read()
-        return False
-
-    url = json.loads(f.read())
+    url = lodgeit_api_request("getLanguages")
     languages={}
     for key in url["data"].keys():
         if len(key) > 0:
@@ -275,29 +273,14 @@ def print_paste(data):
 
 
 def get_last_paste(options):
-    req = urllib2.Request(url=DPASTE_URL+'json/?method=pastes.getLast', data='', headers={'User-agent': USER_AGENT})
-    if options.proxy:
-        if options.debug:
-            print >> sys.stderr, "Using proxy: %s" % options.proxy
-        req.set_proxy(options.proxy, 'http')
-
-    try:
-        f = urllib2.urlopen(req)
-    except urllib2.URLError, e: 
-        if hasattr(e, 'reason'):
-            print >> sys.stderr, "Error Getting Paste: %s" % e.reason
-        elif hasattr(e, 'code'):
-            print >> sys.stderr, "Server Error: %d - %s" % (e.code, e.msg)
-            if options.debug:
-                print f.read()
+    url = lodgeit_api_request("getLast","",options)
+    if not url:
         return False
-
-    url = json.loads(f.read())
     if url["error"] == None:
         print "Most recent public paste"
-        print '#'*50
+        print "%s%s%s%s%s" % ('#/*','-'*27,'snip','-'*27,'*\#')
         print_paste(url["data"])
-        print '#'*50
+        print "%s%s%s%s%s\n" % ('#\*','-'*27,'*snip*','-'*27,'*/#')
     else:
         print >> sys.stderr, "API Error: %s" % url["error"]
         if options.debug:
@@ -307,25 +290,9 @@ def get_last_paste(options):
 
 def get_recent_pastes(options):
     params = json.dumps({'amount': options.amount})
-
-    req = urllib2.Request(url=DPASTE_URL+'json/?method=pastes.getRecent', data=params, headers={'User-agent': USER_AGENT,'Content-Type': 'application/json'})
-    if options.proxy:
-        if options.debug:
-            print >> sys.stderr, "Using proxy: %s" % options.proxy
-        req.set_proxy(options.proxy, 'http')
-
-    try:
-        f = urllib2.urlopen(req)
-    except urllib2.URLError, e: 
-        if hasattr(e, 'reason'):
-            print >> sys.stderr, "Error Uploading: %s" % e.reason
-        elif hasattr(e, 'code'):
-            print >> sys.stderr, "Server Error: %d - %s" % (e.code, e.msg)
-            if options.debug:
-                print f.read()
+    url = lodgeit_api_request("getRecent",params,options)
+    if not url:
         return False
-
-    url = json.loads(f.read())
     if url["error"] == None:
         print "%s most recent public pastes" % str(options.amount)
         print "%s%s%s%s%s" % ('#/*','-'*27,'snip','-'*27,'*\#')
@@ -347,6 +314,7 @@ def main():
     deepdetect_map = {'bin/bash':'bash', 'bin/sh':'bash', 'python':'python', 'perl':'perl', 'ruby':'rb', '<!DOCTYPE':'html', '<?php':'php','bin/php':'php'}
     usage = """\
 Usage: %%prog [OPTION]... [FILE]...
+  dpaste is fpaste for LodgeIt pastebin.
   send text file(s), stdin, or clipboard to the %s pastebin and return the URL.
 
 Examples:
@@ -493,7 +461,7 @@ Examples:
         if not confirm("OK to send?"):
             sys.exit(1)
 
-    url = paste(text, options)
+    url,index = paste(text, options)
     if url:
         # try to save URL in clipboard, and warn but don't error
         if options.clipout:
@@ -512,7 +480,7 @@ Examples:
         sys.exit(1)
 
     if options.pasteself:
-        print >> sys.stderr, "install dpaste to local ~/bin dir by running:    mkdir -p ~/bin; curl " + url + "raw/ -o ~/bin/dpaste && chmod +x ~/bin/dpaste"
+        print >> sys.stderr, "install dpaste to local ~/bin dir by running:    mkdir -p ~/bin; curl " + DPASTE_URL + "raw/" + index + "/ -o ~/bin/dpaste && chmod +x ~/bin/dpaste"
 
     sys.exit(0)
 
