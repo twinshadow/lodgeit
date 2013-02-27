@@ -36,11 +36,11 @@
 
 VERSION = '0.1.0'
 USER_AGENT = 'dpaste/' + VERSION
-SET_DESCRIPTION_IF_EMPTY = 1  # stdin, clipboard, sysinfo
 DPASTE_URL = 'http://localhost:5000/'
 
 import os, sys, urllib, urllib2, subprocess, json
 from optparse import OptionParser, OptionGroup, SUPPRESS_HELP
+
 
 def is_text(text, maxCheck = 100, pctPrintable = 0.75):
     '''returns true if maxCheck evenly distributed chars in text are >= pctPrintable% text chars'''
@@ -83,7 +83,7 @@ def confirm(prompt = "OK?"):
 
 
 def paste(text, options):
-    '''send text to dpaste.org and return the URL'''
+    '''send text to LodgeIt and return the URL'''
     import re
     if not text:
         print >> sys.stderr, "No text to send."
@@ -128,20 +128,6 @@ def paste(text, options):
       if options.debug:
         print f.read()
       return False
-"""
-    if re.match(DPASTE_URL + '?.+', url):
-        return url
-    elif urllib2.urlparse.urlsplit(url).path == '/static/limit/':
-        # instead of returning a 500 server error, dpaste.org now returns "http://fedoraunity.org/static/limit/" if paste too large
-        print >> sys.stderr, "Error: paste size (%.1fKiB) exceeded server limit.  %s" % (pasteSizeKiB, url)
-        return False
-    else:
-        print >> sys.stderr, "Invalid URL '%s' returned. This should not happen. Use --debug to see server output" % url
-        if options.debug:
-            print f.read()
-        return False
-"""
-
 
 def sysinfo(show_stderr = False, show_successful_cmds = True, show_failed_cmds = True):
     '''returns commonly requested (and some fedora-specific) system info'''
@@ -415,6 +401,9 @@ if __name__ == '__main__':
         if '--generate-man' in sys.argv:
             generate_man_page()
         else:
+            #account for trailing slashes on url
+            if DPASTE_URL[-1:] != '/':
+                DPASTE_URL = DPASTE_URL + '/'
             main()
     except KeyboardInterrupt:
         print "\ninterrupted."
