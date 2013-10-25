@@ -25,11 +25,11 @@ from lodgeit.controllers import get_controller
 class LodgeIt(object):
     """The WSGI Application"""
 
-    def __init__(self, dburi, secret_key):
-        self.secret_key = secret_key
+    def __init__(self, config):
+        self.secret_key = config["secret_key"]
 
         #: bind metadata, create engine and create all tables
-        self.engine = engine = create_engine(dburi, convert_unicode=True)
+        self.engine = engine = create_engine(config["dburi"], convert_unicode=True)
         db.metadata.bind = engine
         db.metadata.create_all(engine, [Paste.__table__])
 
@@ -59,7 +59,7 @@ class LodgeIt(object):
         urls = urlmap.bind_to_environ(environ)
         try:
             endpoint, args = urls.match(request.path)
-            handler = get_controller(endpoint)
+            handler = get_controller(endpoint, config)
             resp = handler(**args)
         except NotFound:
             handler = get_controller('static/not_found')
@@ -76,10 +76,10 @@ class LodgeIt(object):
                                self.cleanup_callbacks)
 
 
-def make_app(dburi, secret_key, debug=False, shell=False):
+def make_app(config, debug=False, shell=False):
     """Apply the used middlewares and create the application."""
     static_path = os.path.join(os.path.dirname(__file__), 'static')
-    app = LodgeIt(dburi, secret_key)
+    app = LodgeIt(config)
     if debug:
         app.engine.echo = True
     app.bind_to_context()

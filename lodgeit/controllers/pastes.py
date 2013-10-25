@@ -18,11 +18,14 @@ from lodgeit.models import Paste
 from lodgeit.database import db
 from lodgeit.lib.highlighting import list_languages, STYLES, get_style
 from lodgeit.lib.pagination import generate_pagination
-from lodgeit.lib.captcha import check_hashed_solution, Captcha
 
 
 class PasteController(object):
     """Provides all the handler callback for paste related stuff."""
+    def __init__(self, config):
+        self.disable_captcha = config.get("disable_captcha") or False
+        if not self.disable_captcha:
+            from lodgeit.lib.captcha import check_hashed_solution, Captcha
 
     def new_paste(self, language=None):
         """The 'create a new paste' view."""
@@ -44,17 +47,18 @@ class PasteController(object):
             if parent_id is not None:
                 parent = Paste.get(parent_id)
 
-            spam = getform('webpage') or antispam.is_spam(code)
-            if spam:
-                error = _('your paste contains spam')
-                captcha = getform('captcha')
-                if captcha:
-                    if check_hashed_solution(captcha):
-                        error = None
-                    else:
-                        error = _('your paste contains spam and the '
-                                  'CAPTCHA solution was incorrect')
-                show_captcha = True
+            if not self.disable_captcha:
+                spam = getform('webpage') or antispam.is_spam(code)
+                if spam:
+                    error = _('your paste contains spam')
+                    captcha = getform('captcha')
+                    if captcha:
+                        if check_hashed_solution(captcha):
+                            error = None
+                        else:
+                            error = _('your paste contains spam and the '
+                                      'CAPTCHA solution was incorrect')
+                    show_captcha = True
             if code and language and not error:
                 paste = Paste(code, language, parent, req.user_hash,
                               'private' in req.form)

@@ -14,7 +14,8 @@ from lodgeit.lib.webapi import xmlrpc
 
 
 class XMLRPCController(object):
-
+    def __init__(self, config):
+        pass
     def handle_request(self):
         if local.request.method == 'POST':
             return xmlrpc.handle_request()
