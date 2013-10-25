@@ -3,3 +3,4 @@ babel
 sqlalchemy
 pytz
 pygments
+simplejson

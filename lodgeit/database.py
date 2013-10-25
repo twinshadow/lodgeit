@@ -21,7 +21,8 @@ metadata = MetaData()
 
 
 def session_factory():
-    options = {'autoflush': True, 'autocommit': False}
+    options = {'autoflush': application.db_autoflush or True,
+               'autocommit': False}
     return orm.create_session(application.engine, **options)
 
 session = orm.scoped_session(session_factory,

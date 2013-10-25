@@ -27,9 +27,11 @@ class LodgeIt(object):
 
     def __init__(self, config):
         self.secret_key = config["secret_key"]
+        self.db_autoflush = config["db"].get("autoflush")
+        self.config = config
 
         #: bind metadata, create engine and create all tables
-        self.engine = engine = create_engine(config["dburi"], convert_unicode=True)
+        self.engine = engine = create_engine(config["db"]["uri"], convert_unicode=True)
         db.metadata.bind = engine
         db.metadata.create_all(engine, [Paste.__table__])
 
@@ -59,7 +61,7 @@ class LodgeIt(object):
         urls = urlmap.bind_to_environ(environ)
         try:
             endpoint, args = urls.match(request.path)
-            handler = get_controller(endpoint, config)
+            handler = get_controller(endpoint, self.config)
             resp = handler(**args)
         except NotFound:
             handler = get_controller('static/not_found')
