@@ -99,7 +99,7 @@ def render_template(template_name, **context):
         gettext=request.translations.ugettext,
         ngettext=request.translations.ungettext
     )
-    return jinja_environment.get_template(template_name).render(context)
+    return jinja_environment.get_template(template_name).render(context, site_title=local.application.site_title)
 
 
 def render_to_response(template_name, **context):

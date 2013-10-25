@@ -28,6 +28,7 @@ class LodgeIt(object):
     def __init__(self, config):
         self.secret_key = config["secret_key"]
         self.db_autoflush = config["db"].get("autoflush")
+        self.site_title = config.get("site_title") or "Lodge It"
         self.config = config
 
         #: bind metadata, create engine and create all tables
