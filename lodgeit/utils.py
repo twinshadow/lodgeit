@@ -10,8 +10,9 @@
 """
 import re
 import time
+import string
 from os import path
-from random import random
+from random import random, choice
 from functools import partial
 
 from werkzeug import Request as RequestBase, Response
@@ -37,6 +38,11 @@ jinja_environment = Environment(loader=FileSystemLoader(
 #: constants
 _word_only = partial(re.compile(r'[^a-zA-Z0-9]').sub, '')
 COOKIE_NAME = u'lodgeit_session'
+
+
+def generate_password():
+    """Generate a password string"""
+    return ''.join(choice(string.letters + string.digits) for i in range(10))
 
 
 def generate_user_hash():

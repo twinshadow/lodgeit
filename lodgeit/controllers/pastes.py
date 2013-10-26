@@ -13,7 +13,7 @@ from werkzeug.exceptions import NotFound
 from lodgeit import local
 from lodgeit.lib import antispam
 from lodgeit.i18n import list_languages as i18n_list_languages, _
-from lodgeit.utils import render_to_response
+from lodgeit.utils import generate_password, render_to_response
 from lodgeit.models import Paste
 from lodgeit.database import db
 from lodgeit.lib.highlighting import list_languages, STYLES, get_style
@@ -85,7 +85,8 @@ class PasteController(object):
             language=language,
             error=error,
             show_captcha=show_captcha,
-            private=private
+            private=private,
+            random_password=generate_password()
         )
 
     def show_paste(self, identifier, raw=False):

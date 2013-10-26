@@ -32,6 +32,8 @@ class Paste(db.Model):
     user_hash = db.Column(db.String(40), nullable=True)
     handled = db.Column(db.Boolean)
     private_id = db.Column(db.String(40), unique=True, nullable=True)
+    password_hash = db.Column(db.String(40))
+
 
     children = db.relation('Paste', cascade='all',
         primaryjoin=parent_id == paste_id,
