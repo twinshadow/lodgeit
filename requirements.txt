@@ -4,3 +4,6 @@ sqlalchemy
 pytz
 pygments
 simplejson
+jinja2
+#captcha
+pillow

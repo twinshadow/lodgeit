@@ -25,6 +25,7 @@ class PasteController(object):
     def __init__(self, config):
         self.disable_captcha = config.get("disable_captcha") or False
         if not self.disable_captcha:
+            global check_hashed_solution, Captcha
             from lodgeit.lib.captcha import check_hashed_solution, Captcha
 
     def new_paste(self, language=None):
