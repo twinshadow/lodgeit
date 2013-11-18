@@ -10,6 +10,18 @@
     <script type="text/javascript" src="/static/jquery-ui-1.8.7.custom.min.js"></script>
     <script type="text/javascript" src="/static/cookie.js"></script>
     <script type="text/javascript" src="/static/lodgeit.js"></script>
+    <script type="text/javascript">
+  $(function() {
+    var availableTags = [
+    {%- for key, caption in languages %}
+      "{{key}}",
+    {%- endfor %}
+    ];
+    $( "#language" ).autocomplete({
+      source: availableTags
+    });
+  });
+    </script>
     {%- if css %}
     <style type="text/css">
       {{ css|e }}

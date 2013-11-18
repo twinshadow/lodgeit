@@ -22,12 +22,8 @@
       <input type="hidden" name="parent" value="{{ parent.identifier }}">
     {%- endif %}
     <textarea name="code" rows="10" cols="80">{{ code|e }}</textarea>
-    <select name="language">
-    {%- for key, caption in languages %}
-      <option value="{{ key }}"{% if language == key
-        %} selected="selected"{% endif %}>{{ caption|e }}</option>
-    {%- endfor %}
-    </select>
+    <input id="language" name="language" value="text">
+    </input>
     <input type="text" value="" name="webpage" id="webpage">
     <input type="submit" value="{% trans %}Paste!{% endtrans %}">
     <input type="button" value="▲" onclick="LodgeIt.resizeTextarea(-100)">
