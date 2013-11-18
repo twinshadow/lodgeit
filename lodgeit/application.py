@@ -65,7 +65,7 @@ class LodgeIt(object):
             handler = get_controller(endpoint, self.config)
             resp = handler(**args)
         except NotFound:
-            handler = get_controller('static/not_found')
+            handler = get_controller('static/not_found', self.config)
             resp = handler()
         except HTTPException, e:
             resp = e.get_response(environ)
