@@ -11,7 +11,7 @@ from lodgeit.database import db
 CONFIG = {
         "db": {
             "autoflush": True,
-            "uri": "sqlite:////tmp/lodgeit.db",
+            "uri": "sqlite:///lodgeit.db",
         },
 # python -c 'import random; print "".join([random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(50)])'
         "secret_key": "no secret key",
