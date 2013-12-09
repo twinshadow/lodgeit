@@ -12,9 +12,10 @@ import time
 import difflib
 from datetime import datetime
 from werkzeug import cached_property
+from sqlalchemy import orm
 
 from lodgeit import local
-from lodgeit.utils import generate_paste_hash
+from lodgeit.utils import generate_paste_hash, sha1
 from lodgeit.lib.highlighting import highlight, preview_highlight, LANGUAGES
 from lodgeit.lib.diff import prepare_udiff
 from lodgeit.database import db
@@ -39,7 +40,7 @@ class Paste(db.Model):
         primaryjoin=parent_id == paste_id,
         backref=db.backref('parent', remote_side=[paste_id]))
 
-    def __init__(self, code, language, parent=None, user_hash=None,
+    def __init__(self, code, language, password, parent=None, user_hash=None,
                  private=False):
         if language not in LANGUAGES:
             language = 'text'
@@ -53,6 +54,7 @@ class Paste(db.Model):
         self.handled = False
         self.user_hash = user_hash
         self.private = private
+        self.password_hash = sha1(password).hexdigest()
 
     @staticmethod
     def get(identifier):

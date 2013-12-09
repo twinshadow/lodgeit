@@ -73,11 +73,15 @@ class Request(RequestBase):
         session = SecureCookie.load_cookie(self, COOKIE_NAME,
                                            local.application.secret_key)
         user_hash = session.get('user_hash')
+        user_passwd = session.get('user_passwd')
 
         if not user_hash:
             session['user_hash'] = generate_user_hash()
             self.first_visit = True
+        if not user_passwd:
+            session['user_passwd'] = generate_password()
         self.user_hash = session['user_hash']
+        self.user_passwd = session['user_passwd']
         self.session = session
 
         # language is limited to english until translations are ready

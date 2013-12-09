@@ -13,7 +13,7 @@ from werkzeug.exceptions import NotFound
 from lodgeit import local
 from lodgeit.lib import antispam
 from lodgeit.i18n import list_languages as i18n_list_languages, _
-from lodgeit.utils import generate_password, render_to_response
+from lodgeit.utils import render_to_response, sha1
 from lodgeit.models import Paste
 from lodgeit.database import db
 from lodgeit.lib.highlighting import list_languages, STYLES, get_style
@@ -43,6 +43,7 @@ class PasteController(object):
         if local.request.method == 'POST':
             code = getform('code', u'')
             language = getform('language')
+            passwd = getform('password')
 
             parent_id = getform('parent')
             if parent_id is not None:
@@ -60,9 +61,10 @@ class PasteController(object):
                             error = _('your paste contains spam and the '
                                       'CAPTCHA solution was incorrect')
                     show_captcha = True
-            if code and language and not error:
-                paste = Paste(code, language, parent, req.user_hash,
-                              'private' in req.form)
+            if code and language and passwd and not error:
+                paste = Paste(code, language, passwd,
+                              parent=parent, user_hash=req.user_hash,
+                              private=('private' in req.form))
                 db.session.add(paste)
                 db.session.commit()
                 local.request.session['language'] = language
@@ -87,7 +89,7 @@ class PasteController(object):
             error=error,
             show_captcha=show_captcha,
             private=private,
-            random_password=generate_password()
+            password=local.request.session.get('user_passwd'),
         )
 
     def show_paste(self, identifier, raw=False):
@@ -106,7 +108,20 @@ class PasteController(object):
             css=css,
             styles=STYLES,
             linenos=linenos,
+            password=local.request.session.get('user_passwd'),
         )
+
+    def delete_paste(self, identifier):
+        """Delete an existing paste"""
+        if local.request.method == 'POST':
+            paste = Paste.get(identifier)
+            passwd = local.request.form.get('password')
+            if sha1(passwd).hexdigest() != paste.password_hash:
+                return NotFound()
+            db.session.delete(paste)
+            db.session.commit()
+            return redirect('/')
+        return NotFound()
 
     def raw_paste(self, identifier):
         """Show an existing paste in raw mode."""
