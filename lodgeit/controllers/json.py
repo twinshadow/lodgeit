@@ -14,7 +14,7 @@ from lodgeit.utils import render_to_response
 
 
 class JSONController(object):
-    def __init__(self, config):
+    def __init__(self):
         pass
     def handle_request(self):
         if local.request.args.get('method'):

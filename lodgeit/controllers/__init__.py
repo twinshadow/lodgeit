@@ -9,8 +9,8 @@
     :license: BSD
 """
 
-def get_controller(name, config):
+def get_controller(name):
     cname, hname = name.split('/')
     module = __import__('lodgeit.controllers.' + cname, None, None, [''])
-    controller = module.controller(config)
+    controller = module.controller()
     return getattr(controller, hname)

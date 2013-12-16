@@ -27,7 +27,7 @@ known_help_pages = set(x[0] for x in HELP_PAGES)
 
 
 class StaticController(object):
-    def __init__(self, config):
+    def __init__(self):
         pass
     def not_found(self):
         return render_to_response('not_found.html')

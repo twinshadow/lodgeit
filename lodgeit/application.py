@@ -62,10 +62,10 @@ class LodgeIt(object):
         urls = urlmap.bind_to_environ(environ)
         try:
             endpoint, args = urls.match(request.path)
-            handler = get_controller(endpoint, self.config)
+            handler = get_controller(endpoint)
             resp = handler(**args)
         except NotFound:
-            handler = get_controller('static/not_found', self.config)
+            handler = get_controller('static/not_found')
             resp = handler()
         except HTTPException, e:
             resp = e.get_response(environ)

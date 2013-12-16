@@ -22,8 +22,8 @@ from lodgeit.lib.pagination import generate_pagination
 
 class PasteController(object):
     """Provides all the handler callback for paste related stuff."""
-    def __init__(self, config):
-        self.disable_captcha = config.get("disable_captcha") or False
+    def __init__(self):
+        self.disable_captcha = local.application.config.get("disable_captcha") or False
         if not self.disable_captcha:
             global check_hashed_solution, Captcha
             from lodgeit.lib.captcha import check_hashed_solution, Captcha
