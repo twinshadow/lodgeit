@@ -31,10 +31,14 @@ class LodgeIt(object):
         self.site_title = config.get("site_title") or "Lodge It"
         self.config = config
 
+        # prepare the upload directory
+        if not os.path.isdir(config["upload_folder"]):
+            os.makedirs(config["upload_folder"])
+
         #: bind metadata, create engine and create all tables
         self.engine = engine = create_engine(config["db"]["uri"], convert_unicode=True)
         db.metadata.bind = engine
-        db.metadata.create_all(engine, [Paste.__table__])
+        db.metadata.create_all(engine)
 
         #: jinja_environment update
         jinja_environment.globals.update({
@@ -89,5 +93,6 @@ def make_app(config, debug=False, shell=False):
     if not shell:
         # we don't need access to the shared data middleware in shell mode
         app = SharedDataMiddleware(app, {
-            '/static': static_path})
+            '/static': static_path,
+            '/uploads': config["upload_folder"]})
     return app

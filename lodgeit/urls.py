@@ -43,4 +43,7 @@ urlmap = Map([
 
     # language
     Rule('/language/<lang>/', endpoint='pastes/set_language'),
+
+    # uploads
+    Rule('/uploads/<filename>/', endpoint='pastes/return_uploaded_file', build_only=True),
 ])

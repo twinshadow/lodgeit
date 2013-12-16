@@ -2,7 +2,7 @@
 {% set page_title = _('New Paste') %}
 {% set active_page = 'new' %}
 {% block body %}
-  <form action="/" method="post" class="submitform">
+  <form action="/" method="post" class="submitform" enctype="multipart/form-data" >
     {%- if error %}
       <div class="notification">
         <h3>{% trans %}Error While Pasting{% endtrans %}</h3>
@@ -44,5 +44,8 @@
       information have a look at <a href="/help/advanced/">the advanced
       features help page</a>.
     {% endtrans %}</div>
+    <div>
+      <input type="file" name="file_0" />
+    </div>
   </form>
 {% endblock %}

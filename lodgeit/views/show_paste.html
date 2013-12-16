@@ -51,6 +51,13 @@
       </ul>
     </div>
   </div>
+  {% if paste.images %}
+  <div>
+    {% for image in paste.images %}
+    <img src="/uploads/{{ image.filename }}" /></p>
+    {% endfor %}
+  </div>
+  {% endif %}
   <div id="paste" class="lang-{{ paste.language }} code{% if not linenos %} nolinenos{% endif %}">
     {{ paste.parsed_code }}
   </div>

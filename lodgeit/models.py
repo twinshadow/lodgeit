@@ -34,7 +34,7 @@ class Paste(db.Model):
     handled = db.Column(db.Boolean)
     private_id = db.Column(db.String(40), unique=True, nullable=True)
     password_hash = db.Column(db.String(40))
-
+    images = orm.relationship("Image", backref="pastes")
 
     children = db.relation('Paste', cascade='all',
         primaryjoin=parent_id == paste_id,
@@ -185,3 +185,10 @@ class Paste(db.Model):
     def render_preview(self, num=5):
         """Render a preview for this paste."""
         return preview_highlight(self.code, self.language, num)
+
+
+class Image(db.Model):
+    __tablename__ = 'images'
+    image_id = db.Column(db.Integer, primary_key=True)
+    paste_id = db.Column(db.Integer, db.ForeignKey('pastes.paste_id'))
+    filename = db.Column(db.Text)

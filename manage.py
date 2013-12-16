@@ -16,7 +16,9 @@ CONFIG = {
 # python -c 'import random; print "".join([random.choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(50)])'
         "secret_key": "no secret key",
         "disable_captcha": False,
-        "site_title": "Lodge It"
+        "site_title": "Lodge It",
+        "allowed_files": ("jpg", "jpeg", "png", "gif", "bmp", "svg",),
+        "upload_folder": "/tmp",
 }
 
 def run_app(app, path='/'):

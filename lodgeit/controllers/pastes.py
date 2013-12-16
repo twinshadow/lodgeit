@@ -8,13 +8,14 @@
     :copyright: 2007-2008 by Armin Ronacher, Christopher Grebs.
     :license: BSD
 """
-from werkzeug import redirect, Response
+from os import path
+from werkzeug import redirect, Response, secure_filename
 from werkzeug.exceptions import NotFound
 from lodgeit import local
 from lodgeit.lib import antispam
 from lodgeit.i18n import list_languages as i18n_list_languages, _
-from lodgeit.utils import render_to_response, sha1
-from lodgeit.models import Paste
+from lodgeit.utils import render_to_response, sha1, allowed_file
+from lodgeit.models import Paste, Image
 from lodgeit.database import db
 from lodgeit.lib.highlighting import list_languages, STYLES, get_style
 from lodgeit.lib.pagination import generate_pagination
@@ -44,6 +45,8 @@ class PasteController(object):
             code = getform('code', u'')
             language = getform('language')
             passwd = getform('password')
+            files = [req.files[fname] for fname in req.files if fname.startswith("file_")]
+            images = dict()
 
             parent_id = getform('parent')
             if parent_id is not None:
@@ -61,11 +64,25 @@ class PasteController(object):
                             error = _('your paste contains spam and the '
                                       'CAPTCHA solution was incorrect')
                     show_captcha = True
+
+            for file in files:
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    images[filename] = file
+
             if code and language and passwd and not error:
                 paste = Paste(code, language, passwd,
                               parent=parent, user_hash=req.user_hash,
                               private=('private' in req.form))
                 db.session.add(paste)
+
+                for filename in images:
+                    imgrow = Image(filename=filename)
+                    paste.images.append(imgrow)
+                    db.session.add(imgrow)
+                    fdest = path.join(local.application.config['upload_folder'], filename)
+                    images[filename].save(fdest)
+
                 db.session.commit()
                 local.request.session['language'] = language
                 return redirect(paste.url)
@@ -211,5 +228,7 @@ class PasteController(object):
         """Show a captcha."""
         return Captcha().get_response(set_cookie=True)
 
+    def return_uploaded_file(self, filename):
+        return send_from_directory(local.application.config['upload_folder'], filename)
 
 controller = PasteController
