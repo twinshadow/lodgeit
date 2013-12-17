@@ -1,0 +1,15 @@
+{
+    "attachments": {
+        "allowed_files": ["jpg", "jpeg", "png", "gif", "bmp", "svg"],
+        "enabled": false,
+        "maximum_upload": 2048,
+        "upload_folder": "/tmp"
+    },
+    "db": {
+        "autoflush": true,
+        "uri": "sqlite:///lodgeit.db"
+    },
+    "disable_captcha": false,
+    "secret_key": "no secret key",
+    "site_title": "Lodge It"
+}
