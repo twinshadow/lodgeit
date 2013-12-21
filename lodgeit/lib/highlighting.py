@@ -50,6 +50,7 @@ LANGUAGES.extend([
     ('multi',            _('Multi-File')),
 ])
 LANGUAGES = dict(sorted(LANGUAGES, key=itemgetter(1)))
+LANGUAGES['text'] = "Plain Text"
 
 
 STYLES = dict((x, x.title()) for x in get_all_styles())
