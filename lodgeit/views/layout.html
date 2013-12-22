@@ -14,8 +14,8 @@
     <script type="text/javascript">
   $(function() {
     var availableTags = [
-    {%- for key, caption in languages %}
-      "{{key}}",
+    {%- for lang in languages.itervalues() %}
+      "{{lang|e}}",
     {%- endfor %}
     ];
     $( "#language" ).autocomplete({

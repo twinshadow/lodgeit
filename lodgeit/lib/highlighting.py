@@ -52,6 +52,7 @@ LANGUAGES.extend([
 LANGUAGES = dict(sorted(LANGUAGES, key=itemgetter(1)))
 LANGUAGES['text'] = "Plain Text"
 
+RLANGS = dict([(str(v),k) for k,v in LANGUAGES.items()])
 
 STYLES = dict((x, x.title()) for x in get_all_styles())
 

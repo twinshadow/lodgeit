@@ -16,7 +16,7 @@ from sqlalchemy import orm
 
 from lodgeit import local
 from lodgeit.utils import generate_paste_hash, sha1
-from lodgeit.lib.highlighting import highlight, preview_highlight, LANGUAGES
+from lodgeit.lib.highlighting import highlight, preview_highlight, LANGUAGES, RLANGS
 from lodgeit.lib.diff import prepare_udiff
 from lodgeit.database import db
 
@@ -42,6 +42,8 @@ class Paste(db.Model):
 
     def __init__(self, code, language, password, parent=None, user_hash=None,
                  private=False):
+        if language in RLANGS:
+            language = RLANGS[language]
         if language not in LANGUAGES:
             language = 'text'
         self.code = u'\n'.join(code.splitlines())

@@ -17,7 +17,7 @@ from lodgeit.i18n import list_languages as i18n_list_languages, _
 from lodgeit.utils import render_to_response, sha1, allowed_file
 from lodgeit.models import Paste, Image
 from lodgeit.database import db
-from lodgeit.lib.highlighting import list_languages, STYLES, get_style
+from lodgeit.lib.highlighting import LANGUAGES, STYLES, get_style
 from lodgeit.lib.pagination import generate_pagination
 
 
@@ -99,7 +99,7 @@ class PasteController(object):
                     private = parent.private
 
         return render_to_response('new_paste.html',
-            languages=list_languages(),
+            languages=LANGUAGES,
             parent=parent,
             code=code,
             language=language,

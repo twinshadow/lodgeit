@@ -22,7 +22,7 @@
       <input type="hidden" name="parent" value="{{ parent.identifier }}">
     {%- endif %}
     <textarea name="code" rows="10" cols="80">{{ code|e }}</textarea>
-    <input id="language" name="language" value="text">
+    <input id="language" name="language" value="{{ languages.text|e }}">
     </input>
     <input type="text" value="" name="webpage" id="webpage">
     <input type="submit" value="{% trans %}Paste!{% endtrans %}">
