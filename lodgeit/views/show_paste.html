@@ -51,10 +51,10 @@
       </ul>
     </div>
   </div>
-  {% if paste.images %}
+  {% if paste.attachments %}
   <div>
-    {% for image in paste.images %}
-    <img src="/uploads/{{ image.filename }}" /></p>
+    {% for attach in paste.attachments %}
+    <a href="/uploads/{{ attach.filename }}" />{{ attach.filename }}</a></p>
     {% endfor %}
   </div>
   {% endif %}

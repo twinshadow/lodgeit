@@ -124,9 +124,3 @@ def render_to_response(template_name, **context):
         context['new_replies'] = Paste.fetch_replies()
     return Response(render_template(template_name, **context),
                     mimetype='text/html')
-
-
-def allowed_file(filename):
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in \
-        local.application.config["allowed_files"]

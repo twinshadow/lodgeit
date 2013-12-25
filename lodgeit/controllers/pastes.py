@@ -12,10 +12,10 @@ from os import path
 from werkzeug import redirect, Response, secure_filename
 from werkzeug.exceptions import NotFound
 from lodgeit import local
-from lodgeit.lib import antispam
+from lodgeit.lib import antispam, attachment
 from lodgeit.i18n import list_languages as i18n_list_languages, _
-from lodgeit.utils import render_to_response, sha1, allowed_file
-from lodgeit.models import Paste, Image
+from lodgeit.utils import render_to_response, sha1
+from lodgeit.models import Paste, Attachment
 from lodgeit.database import db
 from lodgeit.lib.highlighting import LANGUAGES, STYLES, get_style
 from lodgeit.lib.pagination import generate_pagination
@@ -40,13 +40,13 @@ class PasteController(object):
         parent = None
         req = local.request
         getform = req.form.get
+        enable_attachments = local.application.attach_config.get("enabled")
+        attach = dict()
 
         if local.request.method == 'POST':
             code = getform('code', u'')
             language = getform('language')
             passwd = getform('password')
-            files = [req.files[fname] for fname in req.files if fname.startswith("file_")]
-            images = dict()
 
             parent_id = getform('parent')
             if parent_id is not None:
@@ -65,10 +65,12 @@ class PasteController(object):
                                       'CAPTCHA solution was incorrect')
                     show_captcha = True
 
-            for file in files:
-                if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    images[filename] = file
+            if enable_attachments:
+                files = [req.files[fname] for fname in req.files if fname.startswith("file_")]
+                for file in files:
+                    if file and attachment.allowed_file(file.filename):
+                        filename = secure_filename(file.filename)
+                        attach[filename] = file
 
             if code and language and passwd and not error:
                 paste = Paste(code, language, passwd,
@@ -76,12 +78,12 @@ class PasteController(object):
                               private=('private' in req.form))
                 db.session.add(paste)
 
-                for filename in images:
-                    imgrow = Image(filename=filename)
-                    paste.images.append(imgrow)
-                    db.session.add(imgrow)
-                    fdest = path.join(local.application.config['upload_folder'], filename)
-                    images[filename].save(fdest)
+                for filename in attach:
+                    atchobj = Attachment(filename)
+                    paste.attachments.append(atchobj)
+                    db.session.add(atchobj)
+                    fdest = path.join(local.application.attach_config['upload_folder'], filename)
+                    attach[filename].save(fdest)
 
                 db.session.commit()
                 local.request.session['language'] = language
@@ -107,6 +109,7 @@ class PasteController(object):
             show_captcha=show_captcha,
             private=private,
             password=local.request.session.get('user_passwd'),
+            enable_attachments=enable_attachments,
         )
 
     def show_paste(self, identifier, raw=False):
@@ -229,6 +232,6 @@ class PasteController(object):
         return Captcha().get_response(set_cookie=True)
 
     def return_uploaded_file(self, filename):
-        return send_from_directory(local.application.config['upload_folder'], filename)
+        return send_from_directory(local.application.attach_config['upload_folder'], filename)
 
 controller = PasteController

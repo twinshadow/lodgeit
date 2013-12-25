@@ -1,6 +1,20 @@
 {% extends "layout.html" %}
 {% set page_title = _('New Paste') %}
 {% set active_page = 'new' %}
+{% block languages %}
+    <script type="text/javascript">
+  $(function() {
+    var availableTags = [
+    {%- for lang in languages.values()|sort %}
+      "{{lang}}",
+    {%- endfor %}
+    ];
+    $( "#language" ).autocomplete({
+      source: availableTags
+    });
+  });
+    </script>
+{% endblock %}
 {% block body %}
   <form action="/" method="post" class="submitform" enctype="multipart/form-data" >
     {%- if error %}
@@ -44,8 +58,10 @@
       information have a look at <a href="/help/advanced/">the advanced
       features help page</a>.
     {% endtrans %}</div>
+    {%- if enable_attachments %}
     <div>
       <input type="file" name="file_0" />
     </div>
+    {% endif %}
   </form>
 {% endblock %}

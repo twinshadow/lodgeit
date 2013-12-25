@@ -30,10 +30,11 @@ class LodgeIt(object):
         self.db_autoflush = config["db"].get("autoflush")
         self.site_title = config.get("site_title") or "Lodge It"
         self.config = config
+        self.attach_config = config["attachments"]
 
         # prepare the upload directory
-        if not os.path.isdir(config["upload_folder"]):
-            os.makedirs(config["upload_folder"])
+        if not os.path.isdir(self.attach_config["upload_folder"]):
+            os.makedirs(self.attach_config["upload_folder"])
 
         #: bind metadata, create engine and create all tables
         self.engine = engine = create_engine(config["db"]["uri"], convert_unicode=True)
@@ -94,5 +95,5 @@ def make_app(config, debug=False, shell=False):
         # we don't need access to the shared data middleware in shell mode
         app = SharedDataMiddleware(app, {
             '/static': static_path,
-            '/uploads': config["upload_folder"]})
+            '/uploads': app.attach_config["upload_folder"]})
     return app

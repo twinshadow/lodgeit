@@ -34,7 +34,7 @@ class Paste(db.Model):
     handled = db.Column(db.Boolean)
     private_id = db.Column(db.String(40), unique=True, nullable=True)
     password_hash = db.Column(db.String(40))
-    images = orm.relationship("Image", backref="pastes")
+    attachments = orm.relationship("Attachment", backref="pastes")
 
     children = db.relation('Paste', cascade='all',
         primaryjoin=parent_id == paste_id,
@@ -189,8 +189,22 @@ class Paste(db.Model):
         return preview_highlight(self.code, self.language, num)
 
 
+class Attachment(db.Model):
+    __tablename__ = 'attachments'
+    attachment_id = db.Column(db.Integer, primary_key=True)
+    paste_id = db.Column(db.Integer, db.ForeignKey('pastes.paste_id'))
+    filename = db.Column(db.Text)
+    def __init__(self, filename):
+        self.filename = filename
+        type = filetype(filename)
+        if type.starts("image"):
+            Image(filename, self)
+
+
 class Image(db.Model):
     __tablename__ = 'images'
     image_id = db.Column(db.Integer, primary_key=True)
-    paste_id = db.Column(db.Integer, db.ForeignKey('pastes.paste_id'))
-    filename = db.Column(db.Text)
+    attachment_id = db.Column(db.Integer, db.ForeignKey('attachments.attachment_id'))
+    preview = db.Column(db.Text, nullable=True)
+    def __init__(self, filename):
+        pass

@@ -11,18 +11,7 @@
     <script type="text/javascript" src="/static/cookie.js"></script>
     <script type="text/javascript" src="/static/fileupload.js"></script>
     <script type="text/javascript" src="/static/lodgeit.js"></script>
-    <script type="text/javascript">
-  $(function() {
-    var availableTags = [
-    {%- for lang in languages.itervalues() %}
-      "{{lang|e}}",
-    {%- endfor %}
-    ];
-    $( "#language" ).autocomplete({
-      source: availableTags
-    });
-  });
-    </script>
+    {%- block languages %}{% endblock %}
     {%- if css %}
     <style type="text/css">
       {{ css|e }}
