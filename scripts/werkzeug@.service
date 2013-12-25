@@ -1,0 +1,12 @@
+[Unit]
+Description=%I Werkzeug FastCGI Process
+
+[Service]
+Type=simple
+User=http
+Group=http
+ExecStart=/usr/bin/python2 /srv/%I/manage.py runfcgi
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
