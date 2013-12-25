@@ -50,8 +50,10 @@
       <label for="insert_tabs_input">{% trans
         %}Tab-key inserts tabstops{% endtrans %}</label>
     </span>
+    {%- if password %}
     <input type="password" value="{{ password }}" id="password" name="password" />
     <label for="password">{% trans %} Password {% endtrans %}</label>
+    {% endif %}
     <div id="multi-file-information">{% trans %}
       You have selected the multi-file highlighter.  This highlighter allows
       you to paste multiple different files that belong together.  For more

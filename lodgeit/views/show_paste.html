@@ -43,10 +43,12 @@
           </select>
           <input type="submit" value="{% trans %}change{% endtrans %}">
         </form></li>
+        {% if password and paste.password_hash %}
         <li> <form action="/delete/{{ paste.identifier }}/" method="post">
             Password: <input type="password" value="{{ password }}" id="password" name="password" />
              <input type="submit" value="{% trans %}delete{% endtrans %}">
         </form> </li>
+        {% endif %}
         <li><a href="?linenos={{ linenos and 'no' or 'yes' }}" onclick="LodgeIt.toggleLineNumbers(); return false;">{% trans %}toggle line numbers{% endtrans %}</a></li>
       </ul>
     </div>

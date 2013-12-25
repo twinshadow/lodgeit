@@ -40,13 +40,17 @@ class PasteController(object):
         parent = None
         req = local.request
         getform = req.form.get
+        config = local.application.config
         enable_attachments = local.application.attach_config.get("enabled")
-        attach = dict()
+        user_passwd = (local.request.session.get('user_passwd') if
+                        config["enable_delete"] else '')
 
         if local.request.method == 'POST':
             code = getform('code', u'')
             language = getform('language')
-            passwd = getform('password')
+            passwd = (getform('password') or
+                        local.request.session.get('user_passwd'))
+            attach = dict()
 
             parent_id = getform('parent')
             if parent_id is not None:
@@ -72,7 +76,7 @@ class PasteController(object):
                         filename = secure_filename(file.filename)
                         attach[filename] = file
 
-            if code and language and passwd and not error:
+            if code and language and not error:
                 paste = Paste(code, language, passwd,
                               parent=parent, user_hash=req.user_hash,
                               private=('private' in req.form))
@@ -108,7 +112,7 @@ class PasteController(object):
             error=error,
             show_captcha=show_captcha,
             private=private,
-            password=local.request.session.get('user_passwd'),
+            password=user_passwd,
             enable_attachments=enable_attachments,
         )
 
@@ -120,6 +124,8 @@ class PasteController(object):
             raise NotFound()
         if raw:
             return Response(paste.code, mimetype='text/plain; charset=utf-8')
+        user_passwd = (local.request.session.get('user_passwd') if
+                    local.application.config["enable_delete"] else '')
 
         style, css = get_style(local.request)
         return render_to_response('show_paste.html',
@@ -128,12 +134,13 @@ class PasteController(object):
             css=css,
             styles=STYLES,
             linenos=linenos,
-            password=local.request.session.get('user_passwd'),
+            password=user_passwd,
         )
 
     def delete_paste(self, identifier):
         """Delete an existing paste"""
-        if local.request.method == 'POST':
+        if (local.application.config["enable_delete"]
+                and local.request.method == 'POST'):
             paste = Paste.get(identifier)
             passwd = local.request.form.get('password')
             if sha1(passwd).hexdigest() != paste.password_hash:

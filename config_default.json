@@ -9,6 +9,7 @@
         "autoflush": true,
         "uri": "sqlite:///lodgeit.db"
     },
+    "enable_delete": false,
     "disable_captcha": false,
     "secret_key": "no secret key",
     "site_title": "Lodge It"
