@@ -685,3 +685,7 @@ div.compiler-messages table td.location span.filename {
 	color: white;
 }
 
+.file_inputs {
+    width: 1em;
+}
+

@@ -17,7 +17,12 @@ def load_config(filename):
         return json.load(fd)
 
 def apply_config(config, filename):
-    config.update(load_config(filename))
+    cfg = load_config(filename)
+    for cfg_section in cfg:
+        if isinstance(config[cfg_section], dict):
+            config[cfg_section].update(cfg[cfg_section])
+        else:
+            config[cfg_section] = cfg[cfg_section]
 
 def write_config(filename, data):
     from random import choice

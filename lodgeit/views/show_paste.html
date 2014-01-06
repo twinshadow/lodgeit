@@ -56,7 +56,7 @@
   {% if paste.attachments %}
   <div>
     {% for attach in paste.attachments %}
-    <a href="/uploads/{{ attach.filename }}" />{{ attach.filename }}</a></p>
+    <a href="/uploads/{{ attach.saved_filename }}" />{{ attach.original_filename }}</a></p>
     {% endfor %}
   </div>
   {% endif %}

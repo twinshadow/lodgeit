@@ -39,7 +39,8 @@ class LodgeIt(object):
         #: bind metadata, create engine and create all tables
         self.engine = engine = create_engine(config["db"]["uri"], convert_unicode=True)
         db.metadata.bind = engine
-        db.metadata.create_all(engine)
+        if self.config["db"]["create_all"]:
+            db.metadata.create_all(engine)
 
         #: jinja_environment update
         jinja_environment.globals.update({

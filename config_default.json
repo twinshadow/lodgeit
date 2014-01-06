@@ -3,10 +3,12 @@
         "allowed_files": ["jpg", "jpeg", "png", "gif", "bmp", "svg"],
         "enabled": false,
         "maximum_upload": 2048,
-        "upload_folder": "/tmp"
+        "upload_folder": "/tmp",
+        "limit": 5
     },
     "db": {
         "autoflush": true,
+        "create_all": false,
         "uri": "sqlite:///lodgeit.db"
     },
     "enable_delete": false,

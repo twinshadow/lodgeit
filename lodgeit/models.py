@@ -12,13 +12,13 @@ import time
 import difflib
 from datetime import datetime
 from werkzeug import cached_property
-from sqlalchemy import orm
 
 from lodgeit import local
 from lodgeit.utils import generate_paste_hash, sha1
 from lodgeit.lib.highlighting import highlight, preview_highlight, LANGUAGES, RLANGS
 from lodgeit.lib.diff import prepare_udiff
 from lodgeit.database import db
+from lodgeit.lib.attachment import filetype, file_preview
 
 
 class Paste(db.Model):
@@ -34,7 +34,7 @@ class Paste(db.Model):
     handled = db.Column(db.Boolean)
     private_id = db.Column(db.String(40), unique=True, nullable=True)
     password_hash = db.Column(db.String(40))
-    attachments = orm.relationship("Attachment", backref="pastes")
+    attachments = db.relation("Attachment", backref="pastes")
 
     children = db.relation('Paste', cascade='all',
         primaryjoin=parent_id == paste_id,
@@ -193,18 +193,11 @@ class Attachment(db.Model):
     __tablename__ = 'attachments'
     attachment_id = db.Column(db.Integer, primary_key=True)
     paste_id = db.Column(db.Integer, db.ForeignKey('pastes.paste_id'))
-    filename = db.Column(db.Text)
-    def __init__(self, filename):
-        self.filename = filename
-        type = filetype(filename)
-        if type.starts("image"):
-            Image(filename, self)
-
-
-class Image(db.Model):
-    __tablename__ = 'images'
-    image_id = db.Column(db.Integer, primary_key=True)
-    attachment_id = db.Column(db.Integer, db.ForeignKey('attachments.attachment_id'))
-    preview = db.Column(db.Text, nullable=True)
-    def __init__(self, filename):
-        pass
+    original_filename = db.Column(db.Text, nullable=False)
+    saved_filename = db.Column(db.Text, nullable=False)
+    filetype = db.Column(db.Text, nullable=False)
+    preview_image = db.Column(db.Text)
+    def __init__(self, filename, saved_filename):
+        self.original_filename = filename
+        self.saved_filename = saved_filename
+        self.filetype = filetype(filename)

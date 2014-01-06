@@ -9,7 +9,7 @@
     :license: BSD
 """
 from os import path
-from werkzeug import redirect, Response, secure_filename
+from werkzeug import redirect, Response
 from werkzeug.exceptions import NotFound
 from lodgeit import local
 from lodgeit.lib import antispam, attachment
@@ -40,8 +40,9 @@ class PasteController(object):
         parent = None
         req = local.request
         getform = req.form.get
-        config = local.application.config
-        enable_attachments = local.application.attach_config.get("enabled")
+        app = local.application
+        config = app.config
+        enable_attachments = app.attach_config.get("enabled")
         user_passwd = (local.request.session.get('user_passwd') if
                         config["enable_delete"] else '')
 
@@ -70,11 +71,11 @@ class PasteController(object):
                     show_captcha = True
 
             if enable_attachments:
-                files = [req.files[fname] for fname in req.files if fname.startswith("file_")]
+                files = [req.files[fname] for fname in req.files
+                        if fname.startswith("file_")][:app.attach_config["limit"]]
                 for file in files:
                     if file and attachment.allowed_file(file.filename):
-                        filename = secure_filename(file.filename)
-                        attach[filename] = file
+                        attach[file.filename] = file
 
             if code and language and not error:
                 paste = Paste(code, language, passwd,
@@ -83,11 +84,14 @@ class PasteController(object):
                 db.session.add(paste)
 
                 for filename in attach:
-                    atchobj = Attachment(filename)
-                    paste.attachments.append(atchobj)
-                    db.session.add(atchobj)
-                    fdest = path.join(local.application.attach_config['upload_folder'], filename)
+                    unique_filename = attachment.unique_filename(filename)
+                    fdest = path.join(
+                            app.attach_config['upload_folder'],
+                            unique_filename)
                     attach[filename].save(fdest)
+                    attobj = Attachment(filename, unique_filename)
+                    paste.attachments.append(attobj)
+                    db.session.add(attobj)
 
                 db.session.commit()
                 local.request.session['language'] = language
